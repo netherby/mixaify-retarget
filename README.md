@@ -1,6 +1,6 @@
 ### Mixaify ###
 
-Mixamo to Rigify animation retargeter.
+Mixamo to Rigify animation retargeter (Blender 5).
 
 Usage:
 
@@ -19,6 +19,8 @@ Usage:
 Retargeting to IK: Use the FK->IK functions in Rigify to convert. I recommend just calculating the IK positions at key frames rather than having it convert every FK key to IK. Firstly it takes ages and secondly the results are rather less than perfect in my experience. It often messes up rotations doing something silly like rotating 368 degrees instead of -3 degrees and there can be jitter in positions when they are keyed on every frame.
 
 Errors:
+
+It only works in Blender 5.
 
 If your FK bone names are not the defaults in Rigify it will not find them. Same is true for Mixamo. It's fast and easy to use because we assume the bone names are the default and you don't have to configure any mapping.
 
