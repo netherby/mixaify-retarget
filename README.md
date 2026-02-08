@@ -22,7 +22,7 @@ Errors:
 
 It only works in Blender 5.
 
-If your FK bone names are not the defaults in Rigify it will not find them. Same is true for Mixamo. It's fast and easy to use because we assume the bone names are the default and you don't have to configure any mapping.
+If your FK bone names are not the defaults in Rigify it will not find them. Same is true for Mixamo. It's fast and easy to use because we assume the bone names are the default and you don't have to configure any mapping. Of course you can just edit the bone mapping table at the top of the script if you really want to use different names.
 
 The animations will never be perfectly the same. The joint positions between the rigs are different even for the exact same model. We track the bone end positions and match them, but bend at the Rigify points. So the exact pose cannot be perfectly matched. This is a simple FK solver using bone constraints, we don't do anything super fancy with intermeidate transfer rigs or whatever. So long as your rigs are the same size and have roughly similar bone positions you should get decent results.
 
