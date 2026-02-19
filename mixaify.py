@@ -1,3 +1,20 @@
+'''
+Copyright (C) 2026 Dancing Fortune Software All Rights Reserved
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import bpy
 
 # -------------------------------------------------------
@@ -8,7 +25,6 @@ import bpy
 # Define relations between Mixamo and Rigify FK bones
 BONE_MAP = {
     "mixamorig:Hips": "torso",
-    "mixamorig:Spine": "spine_fk",
     "mixamorig:Spine1": "spine_fk.002",
     "mixamorig:Spine2": "spine_fk.003",
     "mixamorig:Neck": "neck",
@@ -33,7 +49,68 @@ BONE_MAP = {
     "mixamorig:RightLeg": "shin_fk.R",
     "mixamorig:RightFoot": "foot_fk.R",
     "mixamorig:RightToeBase": "toe_fk.R",
+    
+    "mixamorig:LeftHandThumb2": "thumb.01.L",
+    "mixamorig:LeftHandThumb3": "thumb.02.L",
+    "mixamorig:LeftHandThumb4": "thumb.03.L",
+
+    "mixamorig:LeftHandIndex2": "f_index.01.L",
+    "mixamorig:LeftHandIndex3": "f_index.02.L",
+    "mixamorig:LeftHandIndex4": "f_index.03.L",
+    
+    "mixamorig:LeftHandMiddle2": "f_middle.01.L",
+    "mixamorig:LeftHandMiddle3": "f_middle.02.L",
+    "mixamorig:LeftHandMiddle4": "f_middle.03.L",
+    
+    "mixamorig:LeftHandRing2": "f_ring.01.L",
+    "mixamorig:LeftHandRing3": "f_ring.02.L",
+    "mixamorig:LeftHandRing4": "f_ring.03.L",
+    
+    "mixamorig:LeftHandPinky2": "f_pinky.01.L",
+    "mixamorig:LeftHandPinky3": "f_pinky.02.L",
+    "mixamorig:LeftHandPinky4": "f_pinky.03.L",
+    
+    "mixamorig:RightHandThumb2": "thumb.01.R",
+    "mixamorig:RightHandThumb3": "thumb.02.R",
+    "mixamorig:RightHandThumb4": "thumb.03.R",
+    
+    "mixamorig:RightHandIndex2": "f_index.01.R",
+    "mixamorig:RightHandIndex3": "f_index.02.R",
+    "mixamorig:RightHandIndex4": "f_index.03.R",
+    
+    "mixamorig:RightHandMiddle2": "f_middle.01.R",
+    "mixamorig:RightHandMiddle3": "f_middle.02.R",
+    "mixamorig:RightHandMiddle4": "f_middle.03.R",
+    
+    "mixamorig:RightHandRing2": "f_ring.01.R",
+    "mixamorig:RightHandRing3": "f_ring.02.R",
+    "mixamorig:RightHandRing4": "f_ring.03.R",
+    
+    "mixamorig:RightHandPinky2": "f_pinky.01.R",
+    "mixamorig:RightHandPinky3": "f_pinky.02.R",
+    "mixamorig:RightHandPinky4": "f_pinky.03.R",
 }
+
+RIGIFY_COPY_ROT_BONES = [
+    "head",
+    "neck",
+    "spine_fk.003",
+    
+    "f_index.01.L", "f_index.02.L", "f_index.03.L",
+    "f_middle.01.L", "f_middle.02.L", "f_middle.03.L",
+    "f_ring.01.L", "f_ring.02.L", "f_ring.03.L",
+    "f_pinky.01.L", "f_pinky.02.L", "f_pinky.03.L",
+
+    "f_index.01.R", "f_index.02.R", "f_index.03.R",
+    "f_middle.01.R", "f_middle.02.R", "f_middle.03.R",
+    "f_ring.01.R", "f_ring.02.R", "f_ring.03.R",
+    "f_pinky.01.R", "f_pinky.02.R", "f_pinky.03.R",
+]
+
+RIGIFY_INVERT_Z_ROT = [
+    "thumb.02.L", "thumb.03.L",
+    "thumb.02.R", "thumb.03.R",
+]
 
 # Location Rigify stores the IK/FK control state of limbs
 RIGIFY_IKFK_TOGGLES = {
@@ -77,10 +154,27 @@ def add_constraints(source_arm, target_arm, ikfk_state):
                 if c.name.startswith(CONSTRAINT_TAG):
                     tgt_pb.constraints.remove(c)
 
-            # Copy Z/X Location if mixamo root instead of track. Y motion will be copied to Rigify root.
+            # Copy Z/X Location if mixamo root instead of track and copy Y rotation. Y motion will be copied to Rigify root.
             if mixamo_name == MIXAMO_ROOT: 
                 con = tgt_pb.constraints.new('COPY_LOCATION')
                 con.use_y = False
+                con.head_tail = 0.237
+                con.name = CONSTRAINT_TAG
+                con.target = source_arm
+                con.subtarget = mixamo_name
+                con.target_space = 'WORLD'
+                con.owner_space = 'WORLD'
+                
+                # Also copy Y rotation
+                con = tgt_pb.constraints.new('COPY_ROTATION')
+                con.use_x = False
+                #con.use_z = False
+            
+            # Bone where rotation is copied instead of using a track
+            elif rigify_name in RIGIFY_COPY_ROT_BONES:
+                con = tgt_pb.constraints.new('COPY_ROTATION')
+                if rigify_name in RIGIFY_INVERT_Z_ROT:
+                    con.invert_z = True
             else:
                 con = tgt_pb.constraints.new('DAMPED_TRACK')
                 con.head_tail = 1.0
@@ -114,6 +208,7 @@ def add_constraints(source_arm, target_arm, ikfk_state):
             con.use_x = False
             
         # Switch rig into FK mode, saving the current state
+        bpy.context.scene.rtm_ikfk_state.prev_mode = bpy.context.scene.rtm_ikfk_mode
         bpy.context.scene.rtm_ikfk_mode = 'FK'
             
     finally: # Restore state
@@ -131,7 +226,7 @@ def remove_constraints(target_arm, ikfk_state):
                     pb.constraints.remove(c)
     
     finally: # Restore state
-        bpy.context.rtm_ikfk_mode = ikfk_state.prev_mode
+        bpy.context.scene.rtm_ikfk_mode = ikfk_state.prev_mode
         restore_mode(prev_obj, prev_mode)
 
 
@@ -390,8 +485,8 @@ class RTM_PT_panel(bpy.types.Panel):
         row.label(text="Rigify Mode:")
         row.prop(context.scene, "rtm_ikfk_mode", text="")
         
-        # Mode switch only enabled in pose mode when retargeting inactive
-        if context.mode != 'POSE' or context.scene.rtm_enabled:
+        # Mode switch only enabled when retargeting inactive
+        if not context.scene.rtm_rigify or context.scene.rtm_enabled:
             row.enabled = False
         # Bake only enabled when retargeting is also active
         if not context.scene.rtm_enabled:
@@ -437,6 +532,7 @@ class RTM_PG_ikfk_state(bpy.types.PropertyGroup):
     right_arm: bpy.props.FloatProperty(min=0.0, max=1.0)
     left_leg: bpy.props.FloatProperty(min=0.0, max=1.0)
     right_leg: bpy.props.FloatProperty(min=0.0, max=1.0)
+    mode: bpy.props.EnumProperty(items=rtm_ikfk_modes(), default='RIG')
     prev_mode: bpy.props.EnumProperty(items=rtm_ikfk_modes(), default='RIG')
     
     
@@ -445,29 +541,40 @@ class RTM_PG_ikfk_state(bpy.types.PropertyGroup):
 # so that when swapped back to 'RIG' the state can be restored. The user
 # could have any mix of IK/FK in the 'RIG' state.
 def rtm_ikfk_mode_update(self, context):
-    if not self.rtm_rigify or context.mode != 'POSE':
+    if not self.rtm_rigify:
         return
     
     rig = self.rtm_rigify
     state = self.rtm_ikfk_state
     
-    if self.rtm_ikfk_mode == 'IK':
-        if self.rtm_ikfk_state.prev_mode == 'RIG':
-            save_ikfk_state(rig, state)
-        
-        set_ik_state(rig)
-        self.rtm_ikfk_state.prev_mode = 'IK'
-        
-    elif self.rtm_ikfk_mode == 'FK':
-        if self.rtm_ikfk_state.prev_mode == 'RIG':
-            save_ikfk_state(rig, state)
+    # Pose mode is required to change IK/FK props
+    reset = False
+    if context.mode != 'POSE':
+        prev_obj, prev_mode = ensure_pose_mode(rig)
+        reset = True
+    
+    try:
+        if self.rtm_ikfk_mode == 'IK':
+            if self.rtm_ikfk_state.mode == 'RIG':
+                save_ikfk_state(rig, state)
             
-        set_fk_state(rig)
-        self.rtm_ikfk_state.prev_mode = 'FK'
-        
-    else:
-        load_ikfk_state(rig, state)
-        self.rtm_ikfk_state.prev_mode = 'RIG'
+            set_ik_state(rig)
+            self.rtm_ikfk_state.mode = 'IK'
+            
+        elif self.rtm_ikfk_mode == 'FK':
+            if self.rtm_ikfk_state.mode == 'RIG':
+                save_ikfk_state(rig, state)
+                
+            set_fk_state(rig)
+            self.rtm_ikfk_state.mode = 'FK'
+            
+        else:
+            load_ikfk_state(rig, state)
+            self.rtm_ikfk_state.mode = 'RIG'
+            
+    finally:
+        if reset:
+            restore_mode(prev_obj, prev_mode)
         
 
 # -------------------------------------------------------
